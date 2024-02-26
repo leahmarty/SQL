@@ -1,0 +1,186 @@
+-- In the original Excel file I edited the column names to snakecase.
+-- As I glance through the data, I wonder whether any rows contain starting_mileage.
+
+select count(*)
+from
+redfin_aa_work.all_appts_2023
+where starting_mileage != 0
+;
+
+-- No rows contain starting mileage. How many rows contain mileage at all?
+
+SELECT count(*)
+from
+redfin_aa_work.all_appts_2023
+where ending_mileage != 0
+;
+
+-- The results of the above query show 695 appointments with nonzero ending_mileage.
+-- Clicking through the appointment links in the purpose column, I learn that 
+-- these zero mileage appointments were either cancelled or handed off to another agent.
+-- I'll drop the starting_mileage column and rename ending_mileage to mileage.
+ 
+ALTER TABLE redfin_aa_work.all_appts_2023
+DROP COLUMN starting_mileage
+;
+ALTER TABLE redfin_aa_work.all_appts_2023
+RENAME COLUMN ending_mileage TO mileage
+;
+
+-- I'll also separate the appointment type and links out of the purpose column.
+-- To select the string before the link delimited by a colon:
+
+SELECT appt_type, SUBSTRING_INDEX(redfin_aa_work.all_appts_2023.purpose, ':', 1)
+FROM redfin_aa_work.all_appts_2023
+;
+
+-- To select the string after the first colon (because of the colon in the link):
+
+SELECT appt_type, SUBSTRING_INDEX(redfin_aa_work.all_appts_2023.purpose, ':', -2)
+FROM redfin_aa_work.all_appts_2023
+;
+
+-- To add the new columns
+
+ALTER TABLE redfin_aa_work.all_appts_2023
+ADD appt_type varchar(255)
+;
+ALTER TABLE redfin_aa_work.all_appts_2023
+ADD link varchar(255)
+;
+
+-- To populate the columns with the appropriate data
+
+SET SQL_SAFE_UPDATES=0
+;
+UPDATE redfin_aa_work.all_appts_2023
+SET appt_type = SUBSTRING_INDEX(redfin_aa_work.all_appts_2023.purpose, ':', 1)
+WHERE appt_type IS NULL
+;
+UPDATE redfin_aa_work.all_appts_2023
+SET link = SUBSTRING_INDEX(redfin_aa_work.all_appts_2023.purpose, ':', -2)
+WHERE link IS NULL
+;
+SET SQL_SAFE_UPDATES=1
+;
+
+-- Now we can drop the purpose column since the information has been moved.
+
+ALTER TABLE redfin_aa_work.all_appts_2023
+DROP COLUMN purpose
+;
+
+-- Next, there is a column named 'type' that seems to only have the values 'Manual' or 'None'.
+-- I believe this is referring to how the mileage is recorded. I always manually enter my
+-- mileage into the Redfin Agent Tools mobile app, so I'll test to see whether there are 
+-- any rows with type 'None' that have nonzero mileage.
+
+SELECT *
+FROM all_appts_2023
+WHERE
+	type = 'None' AND
+    mileage <> 0
+;
+
+-- This returned 0 rows, so I can safely drop the type 'None' rows and the 'type' column.
+-- The remaining data will only include completed appointments.
+
+SET SQL_SAFE_UPDATES=0
+;
+DELETE FROM all_appts_2023
+WHERE type = 'None'
+;
+SET SQL_SAFE_UPDATES=1
+;
+ALTER TABLE redfin_aa_work.all_appts_2023
+DROP COLUMN type
+;
+
+-- The remaining columns are date, client, mileage, appt_type, and link with 695 rows.
+-- To check that each row is unique, I'll count the distinct links.
+
+SELECT COUNT(DISTINCT(link))
+FROM all_appts_2023
+;
+
+-- This returned 693 distinct links, so I know there must be two duplicates.
+-- To find the duplicates:
+
+SELECT link, COUNT(link)
+FROM all_appts_2023
+GROUP BY link
+HAVING COUNT(link) > 1
+;
+
+SELECT *
+FROM all_appts_2023
+WHERE 
+	link = ' https://www.redfin.com/tools/tours?tourId=11158502' OR
+	link = ' https://www.redfin.com/tools/tours?tourId=11345698'
+;
+
+-- For the first duplicate the dates and  mileages are different, and I remember why.
+-- This showing was rescheduled after I had driven there for the first time and
+-- found there was no lockbox on the property to gain access. The lockbox was added
+-- by the listing agent after a few days and then I drove there again to show it.
+--
+-- The second duplicate has the same date and mileage, and after looking through the
+-- tour link I can't find any reason why it should have been duplicated other than 
+-- a possible system glitch when I rescheduled it an hour earlier and then back to the
+-- original time. I don't recall showing that property twice, so I'll delete this duplicate.
+
+DELETE
+FROM all_appts_2023
+WHERE link = ' https://www.redfin.com/tools/tours?tourId=11345698'
+LIMIT 1;
+
+ -- I've also noticed that the end of the links have appointment IDs, which would make
+ -- another useful column. I'll also give the remaining duplicate a unique ID.
+ 
+ALTER TABLE redfin_aa_work.all_appts_2023
+ADD appt_id varchar(255)
+;       
+SET SQL_SAFE_UPDATES=0
+;
+UPDATE all_appts_2023
+SET appt_id = SUBSTRING_INDEX(redfin_aa_work.all_appts_2023.link, '=', -1)
+WHERE appt_id IS NULL
+;
+UPDATE all_appts_2023
+SET appt_id = 11158503
+WHERE appt_id = 11158502
+LIMIT 1
+;
+SET SQL_SAFE_UPDATES=1
+;
+
+-- Querying through the data, I've also realized that date isn't formatted correctly.
+-- I'll convert it to the date datatype.
+
+SET SQL_SAFE_UPDATES=0
+;
+
+UPDATE all_appts_2023
+SET date = str_to_date(date, "%c/%e/%Y")
+;
+ALTER TABLE all_appts_2023
+MODIFY date date
+;
+
+SET SQL_SAFE_UPDATES=1
+;  
+
+-- I'll remove the space before the link as well.
+
+UPDATE all_appts_2023
+SET link = TRIM(link)
+;
+
+-- The data is now clean and ready for analysis!
+
+
+
+
+
+
+        
