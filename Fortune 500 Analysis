@@ -72,7 +72,7 @@ FROM fortune_companies
 GROUP BY healthcare_benefits;
 
 -- On average companies that offer healthcare have more revenue, tenure, PTO, and maternity leave.
--- The average company size is also smaller. I'll filter for healthcare benefits from here on.
+-- The average company size is also smaller.
 
 -- Here we query average stats for each industry having more than 15 PTO days on average.
 SELECT
