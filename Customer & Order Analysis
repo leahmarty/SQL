@@ -1,0 +1,84 @@
+-- In this SQL, I'm querying a database with multiple tables in it to quantify statistics about customer and order data. 
+
+-- How many orders were placed in January?
+
+SELECT
+    COUNT(DISTINCT orderID)
+FROM BIT_DB.JanSales
+WHERE
+    length(orderID) = 6 AND
+    orderID <> 'Order ID';
+    
+-- How many of those orders were for an Iphone?
+
+SELECT
+    COUNT(DISTINCT orderID)
+FROM BIT_DB.JanSales
+WHERE
+    length(orderID) = 6 AND
+    orderID <> 'Order ID' AND
+    Product = 'iPhone';
+    
+-- Select the customer account numbers for all the orders that were placed in February.
+
+SELECT
+    DISTINCT c.acctnum   
+FROM BIT_DB.FebSales AS feb
+INNER JOIN BIT_DB.customers as c
+    ON feb.orderID = c.order_id
+WHERE
+    length(feb.orderID) = 6 AND
+    feb.orderID <> 'Order ID';
+    
+-- Which product was the cheapest one sold in January, and what was the price?
+
+SELECT
+    Product,
+    price
+FROM BIT_DB.JanSales
+WHERE
+    length(orderID) = 6 AND
+    orderID <> 'Order ID'
+GROUP BY Product
+ORDER BY price ASC
+Limit 1;
+
+-- What is the total revenue for each product sold in January?
+
+SELECT
+    Product,
+    ROUND(SUM(Quantity)*price) AS revenue
+FROM BIT_DB.JanSales
+WHERE
+    length(orderID) = 6 AND
+    orderID <> 'Order ID'
+GROUP BY Product
+ORDER BY ROUND(SUM(Quantity)*price) DESC;
+
+-- Which products were sold in February at 548 Lincoln St, Seattle, WA 98101, how many of each were sold, 
+-- and what was the total revenue?
+
+SELECT
+    Product,
+    Quantity,
+    Quantity*price AS total_revenue,
+    location
+FROM BIT_DB.FebSales
+WHERE
+    length(orderID) = 6 AND
+    orderID <> 'Order ID' AND
+    location = '548 Lincoln St, Seattle, WA 98101';
+    
+-- How many customers ordered more than 2 products at a time in February,
+-- and what was the average amount spent for those customers?
+
+SELECT
+    COUNT(DISTINCT acctnum),
+    ROUND(AVG(Quantity*price),2) AS avg_spent
+FROM BIT_DB.FebSales AS feb
+LEFT JOIN BIT_DB.customers AS c
+    ON feb.orderID = c.order_id
+WHERE
+    length(orderID) = 6 AND
+    orderID <> 'Order ID' AND
+    Quantity > 2;
