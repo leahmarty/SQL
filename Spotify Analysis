@@ -1,0 +1,87 @@
+-- For this project, I downloaded Spotify data from Kaggle.
+-- The data includes the top 50 most listened to songs in the world for year 2021 on Spotify.
+-- Then I created a table to insert Spotify data into.
+-- Finally, I performed analytics on the data using SQL. 
+
+-- Creating the table: 
+CREATE TABLE BIT_DB.Spotifydata (
+id integer PRIMARY KEY,
+artist_name varchar NOT NULL,
+track_name varchar NOT NULL,
+track_id varchar NOT NULL,
+popularity integer NOT NULL,
+danceability decimal(4,3) NOT NULL,
+energy decimal(4,3) NOT NULL,
+key integer NOT NULL,
+loudness decimal(5,3) NOT NULL,
+mode integer NOT NULL,
+speechiness decimal(5,4) NOT NULL,
+acousticness decimal(6,5) NOT NULL,
+instrumentalness text NOT NULL,
+liveness decimal(5,4) NOT NULL,
+valence decimal(4,3) NOT NULL,
+tempo decimal(6,3) NOT NULL,
+duration_ms integer NOT NULL,
+time_signature integer NOT NULL 
+)
+
+-- Then I inserted the Spotify Data .csv into the table.
+-- Next, I explored the data using the following SQL. 
+
+-- How many artists are featured in this list of 50 songs?  
+
+SELECT
+    COUNT(DISTINCT artist_name)
+FROM BIT_DB.Spotifydata;
+
+-- Of the 35 distinct artists, which have multiple tracks on the list,
+-- and which artists have the most tracks?
+
+SELECT
+    artist_name,
+    COUNT(id)
+FROM BIT_DB.Spotifydata
+GROUP BY artist_name
+HAVING COUNT(id) > 1
+ORDER BY COUNT(id) DESC;
+
+-- List the tracks from most to least popular.
+
+SELECT
+    artist_name,
+    track_name,
+    popularity,
+    danceability,
+    speechiness
+FROM BIT_DB.Spotifydata
+ORDER BY popularity DESC;
+
+-- There are some tracks with the same popularity score.
+-- I'll count the tracks grouped by score, and order them by popularity.
+
+SELECT
+    popularity,
+    COUNT(id)
+FROM BIT_DB.Spotifydata
+GROUP BY popularity
+ORDER BY popularity DESC;
+
+-- Calculate the average popularity for the artists in the Spotify data table.
+-- Then, for every artist with an average popularity of 90 or above, 
+-- show their name, their average popularity, and label them as a “Top Star”.
+
+WITH CTE AS 
+    (
+    SELECT
+        artist_name,
+        ROUND(AVG(popularity),2) AS avg_popularity
+    FROM Spotifydata
+    GROUP BY artist_name
+    ORDER BY AVG(popularity) DESC
+    )
+SELECT
+    artist_name,
+    avg_popularity,
+    "Top Star" AS label
+FROM CTE
+WHERE avg_popularity >= 90;
