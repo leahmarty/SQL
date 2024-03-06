@@ -1,0 +1,94 @@
+-- This project uses data tables that resemble iTunes data except that each track is sold by a sales representative.
+
+-- Show Customers (their full names, customer ID, and country) who are not in the US.
+
+SELECT
+    CustomerId,
+    FirstName,
+    LastName,
+    Country
+FROM customers
+WHERE Country != 'USA';
+
+-- Find the Invoices of customers who are from Brazil.
+-- The resulting table should show the customer's full name, 
+-- Invoice ID, Date of the invoice, and billing country.
+
+SELECT
+    cst.FirstName,
+    cst.LastName,
+    invcs.InvoiceId,
+    invcs.BillingCountry
+FROM customers AS cst
+LEFT JOIN invoices AS invcs
+ON cst.CustomerId = invcs.CustomerId
+WHERE cst.Country = 'Brazil';
+
+-- Show the invoices associated with each sales agent.
+-- The resulting table should include the Sales Agent's full name.
+
+SELECT
+    emp.FirstName || ' ' || emp.LastName AS emp_name,
+    inv.InvoiceId,
+    inv.InvoiceDate,
+    cstmr.FirstName || ' ' || cstmr.LastName AS cstmr_name
+FROM invoices AS inv
+LEFT JOIN customers AS cstmr
+    ON inv.CustomerId = cstmr.CustomerId
+LEFT JOIN employees AS emp
+    ON cstmr.SupportRepId = emp.EmployeeId
+ORDER BY emp.LastName;
+
+-- Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
+
+SELECT
+    inv.InvoiceId,
+    inv.Total,
+    cstmr.FirstName || ' ' || cstmr.LastName AS cstmr_name,
+    cstmr.Country,
+    emp.FirstName || ' ' || emp.LastName AS emp_name
+FROM invoices AS inv
+LEFT JOIN customers AS cstmr
+    ON inv.CustomerId = cstmr.CustomerId
+LEFT JOIN employees AS emp
+    ON cstmr.SupportRepId = emp.EmployeeId
+ORDER BY inv.InvoiceId;
+
+-- Write a query that includes the purchased track name with each invoice line ID.
+
+SELECT
+    item.InvoiceLineId,
+    track.Name
+FROM invoice_items AS item
+LEFT JOIN tracks as track
+    ON item.TrackId = track.TrackId
+ORDER BY item.InvoiceLineId;
+
+-- Show the total sales made by each sales agent.
+
+SELECT
+    emp.EmployeeId,
+    emp.FirstName || ' ' || emp.LastName AS emp_name,
+    ROUND(SUM(inv.Total),2) AS total_sales
+FROM invoices AS inv
+LEFT JOIN customers AS cstmr
+    ON inv.CustomerId = cstmr.CustomerId
+LEFT JOIN employees AS emp
+    ON cstmr.SupportRepId = emp.EmployeeId
+GROUP BY emp.EmployeeId
+ORDER BY ROUND(SUM(inv.Total),2) DESC;
+
+-- Which sales agent made the most dollars in sales in 2009?
+
+SELECT
+    emp.EmployeeId,
+    emp.FirstName || ' ' || emp.LastName AS emp_name,
+    ROUND(SUM(inv.Total),2) AS total_sales
+FROM invoices AS inv
+LEFT JOIN customers AS cstmr
+    ON inv.CustomerId = cstmr.CustomerId
+LEFT JOIN employees AS emp
+    ON cstmr.SupportRepId = emp.EmployeeId
+WHERE inv.InvoiceDate LIKE '2009%'
+GROUP BY emp.EmployeeId
+ORDER BY ROUND(SUM(inv.Total),2) DESC;
