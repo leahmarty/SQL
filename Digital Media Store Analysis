@@ -1,4 +1,5 @@
--- This project uses data tables that resemble the iTunes business model except that each track is sold by a sales representative.
+-- This project uses data tables from a digital media store that resemble the iTunes business model
+-- except that each track is sold by a sales representative.
 
 -- Show Customers (their full names, customer ID, and country) who are not in the US.
 
