@@ -1,18 +1,16 @@
 -- In the original Excel file I edited the column names to snakecase.
 -- As I glance through the data, I wonder whether any rows contain starting_mileage.
 
-select count(*)
-from
-redfin_aa_work.all_appts_2023
-where starting_mileage != 0
+SELECT COUNT(*)
+FROM redfin_aa_work.all_appts_2023
+WHERE starting_mileage != 0
 ;
 
 -- No rows contain starting mileage. How many rows contain mileage at all?
 
-SELECT count(*)
-from
-redfin_aa_work.all_appts_2023
-where ending_mileage != 0
+SELECT COUNT(*)
+FROM redfin_aa_work.all_appts_2023
+WHERE ending_mileage != 0
 ;
 
 -- The results of the above query show 695 appointments with nonzero ending_mileage.
@@ -79,7 +77,7 @@ SELECT *
 FROM all_appts_2023
 WHERE
 	type = 'None' AND
-    mileage <> 0
+	mileage <> 0
 ;
 
 -- This returned 0 rows, so I can safely drop the type 'None' rows and the 'type' column.
@@ -126,7 +124,7 @@ WHERE
 --
 -- The second duplicate has the same date and mileage, and after looking through the
 -- tour link I can't find any reason why it should have been duplicated other than 
--- a possible system glitch when I rescheduled it an hour earlier and then back to the
+-- a possible system glitch when I rescheduled it to an hour earlier and then back to the
 -- original time. I don't recall showing that property twice, so I'll delete this duplicate.
 
 DELETE
