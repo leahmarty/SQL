@@ -22,10 +22,10 @@ GROUP BY appt_type
 SELECT 
 	appt_type, 
 	COUNT(appt_id) AS appt_count, 
-    ROUND(SUM(mileage), 2) AS total_mileage,
+	ROUND(SUM(mileage), 2) AS total_mileage,
 	ROUND(AVG(mileage), 2) AS avg_milage,
-    MAX(mileage),
-    MIN(mileage)
+	MAX(mileage),
+	MIN(mileage)
 FROM all_appts_2023
 GROUP BY appt_type
 ORDER BY appt_count DESC
@@ -36,12 +36,12 @@ ORDER BY appt_count DESC
 
 SELECT 
 	ROUND(((
-    (
-    SELECT
+    	(
+   	SELECT
 		COUNT(appt_id)
 	FROM all_appts_2023
-    WHERE appt_type = 'Tour'
-    )
+	WHERE appt_type = 'Tour'
+	)
 	/COUNT(appt_id)) *100), 2) AS tour_percentage
 FROM all_appts_2023
 ;
